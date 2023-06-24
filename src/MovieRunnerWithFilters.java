@@ -96,12 +96,12 @@ public class MovieRunnerWithFilters {
     }
     public static void main(String[] args) {
         MovieRunnerWithFilters inst = new MovieRunnerWithFilters();
-//        inst.printAverageRatings();
+        inst.printAverageRatings();
 //        inst.printAverageRatingsByYear();
 //        inst.printAverageRatingsByGenre();
 //        inst.printAverageRatingsByMinutes();
 //        inst.printAverageRatingsByDirectors();
 //        inst.printAverageRatingsByYearAfterAndGenre();
-        inst.printAverageRatingsByDirectorsAndMinutes();
+//        inst.printAverageRatingsByDirectorsAndMinutes();
     }
 }
