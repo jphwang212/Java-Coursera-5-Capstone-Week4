@@ -32,7 +32,9 @@ public class FourthRatings {
             if (!id.equals(r.getID())) {
                 double product = dotProduct(me, r);
                 Rating rating = new Rating(r.getID(), product);
-                list.add(rating);
+                if (rating.getValue() > 0.0) {
+                    list.add(rating);
+                }
             }
         }
         Collections.sort(list, Collections.reverseOrder());
@@ -84,13 +86,23 @@ public class FourthRatings {
     }
 
     public ArrayList<Rating> getSimilarRatings(String id, int numSimilarRaters, int minimalRaters) {
+        // Get similarity ratings
         ArrayList<Rating> ratings = getSimilarities(id);
-        for (Rating rating : ratings) {
-            Movie movie = MovieDatabase.getMovie(rating.getItem());
-            ArrayList<Rating> movieRatings = MovieDatabase.
-            if (rating.getValue() < 0.0 || ) {
-                ratings.remove(rating);
+        ArrayList<Rating> ret = new ArrayList<Rating>();
+        ArrayList<String> moviesList = MovieDatabase.filterBy(new TrueFilter());
+        for (String movieId : moviesList) {
+            double runningSum = 0.0;
+            for (int i = 0; i < numSimilarRaters; i++) {
+                Rating rating = ratings.get(i);
+                // use weight in rating to update running totals
+                runningSum += rating.getValue();
             }
+            // add Rating for movie to ret
+            Rating retRating = new Rating(movieId, runningSum);
+            ret.add(retRating);
         }
+        // return ret after sorting
+        Collections.sort(ret);
+        return ret;
     }
 }
