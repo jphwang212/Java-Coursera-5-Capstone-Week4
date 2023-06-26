@@ -35,8 +35,21 @@ public class MovieRunnerSimilarRatings {
         }
     }
 
+    public void printSimilarRatings() {
+        FourthRatings fourth = new FourthRatings();
+        RaterDatabase.initialize("ratings.csv");
+        MovieDatabase.initialize("ratedmoviesfull.csv");
+        ArrayList<Rating> similarRatings = fourth.getSimilarRatings("65", 20, 5);
+        for (Rating rating : similarRatings) {
+            String movieId = rating.getItem();
+            String title = MovieDatabase.getTitle(movieId);
+            System.out.println(title + ": " + rating.getValue());
+        }
+    }
+
     public static void main(String[] args) {
         MovieRunnerSimilarRatings inst = new MovieRunnerSimilarRatings();
-        inst.printAverageRatings();
+//        inst.printAverageRatings();
+        inst.printSimilarRatings();
     }
 }
