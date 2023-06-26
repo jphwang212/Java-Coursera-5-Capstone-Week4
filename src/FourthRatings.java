@@ -2,6 +2,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class FourthRatings {
     private double dotProduct(Rater me, Rater r) {
@@ -25,6 +26,7 @@ public class FourthRatings {
         }
         return answer;
     }
+    // get raters that are similar to id
     private ArrayList<Rating> getSimilarities(String id) {
         ArrayList<Rating> list = new ArrayList<Rating>();
         Rater me = RaterDatabase.getRater(id);
@@ -39,6 +41,33 @@ public class FourthRatings {
         }
         Collections.sort(list, Collections.reverseOrder());
         return list;
+    }
+    // get ratings of movies and their weighted avg ratings
+    // using only top numSimilarRaters
+    public ArrayList<Rating> getSimilarRatings(String id, int numSimilarRaters, int minimalRaters) {
+        // Get similarity ratings
+        ArrayList<Rating> similarRaters = getSimilarities(id);
+        if (similarRaters.size() < numSimilarRaters) {
+            return new ArrayList<Rating>();
+        }
+        List<Rating> topSimilarRaters = similarRaters.subList(0, numSimilarRaters);
+        ArrayList<Rating> ret = new ArrayList<Rating>();
+        ArrayList<String> moviesList = MovieDatabase.filterBy(new TrueFilter());
+        for (String movieId : moviesList) {
+            double runningSum = 0.0;
+            for (Rating rater : topSimilarRaters) {
+                String raterId = rater.getItem();
+                Rater raterAll = RaterDatabase.getRater(raterId);
+                if (raterAll.hasRating(movieId)) {
+                    runningSum += rater.getValue();
+                } else break;
+            }
+            Rating retRating = new Rating(movieId, runningSum);
+            ret.add(retRating);
+        }
+        // return ret after sorting
+        Collections.sort(ret, Collections.reverseOrder());
+        return ret;
     }
     private double getAverageByID(String id, int minimalRaters) {
         ArrayList<Rater> myRaters = RaterDatabase.getRaters();
@@ -83,26 +112,5 @@ public class FourthRatings {
             }
         }
         return averages;
-    }
-
-    public ArrayList<Rating> getSimilarRatings(String id, int numSimilarRaters, int minimalRaters) {
-        // Get similarity ratings
-        ArrayList<Rating> ratings = getSimilarities(id);
-        ArrayList<Rating> ret = new ArrayList<Rating>();
-        ArrayList<String> moviesList = MovieDatabase.filterBy(new TrueFilter());
-        for (String movieId : moviesList) {
-            double runningSum = 0.0;
-            for (int i = 0; i < numSimilarRaters; i++) {
-                Rating rating = ratings.get(i);
-                // use weight in rating to update running totals
-                runningSum += rating.getValue();
-            }
-            // add Rating for movie to ret
-            Rating retRating = new Rating(movieId, runningSum);
-            ret.add(retRating);
-        }
-        // return ret after sorting
-        Collections.sort(ret);
-        return ret;
     }
 }
