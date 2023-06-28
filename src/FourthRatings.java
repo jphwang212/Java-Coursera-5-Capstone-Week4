@@ -1,8 +1,6 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 public class FourthRatings {
     private double dotProduct(Rater me, Rater r) {
@@ -50,20 +48,32 @@ public class FourthRatings {
         if (similarRaters.size() < numSimilarRaters) {
             return new ArrayList<Rating>();
         }
-        List<Rating> topSimilarRaters = similarRaters.subList(0, numSimilarRaters);
+//        System.out.println(similarRaters.size());
+//        System.out.println(similarRaters.get(1041));
         ArrayList<Rating> ret = new ArrayList<Rating>();
         ArrayList<String> moviesList = MovieDatabase.filterBy(new TrueFilter());
         for (String movieId : moviesList) {
             double runningSum = 0.0;
-            for (Rating rater : topSimilarRaters) {
+            int numMovieRaters = 0;
+            // Movie weighted avg = ((r1*s1) + (rx*sx)) / x
+            // for a movie:
+            //   add weighted avgs
+            for (Rating rater : similarRaters) {
                 String raterId = rater.getItem();
-                Rater raterAll = RaterDatabase.getRater(raterId);
-                if (raterAll.hasRating(movieId)) {
-                    runningSum += rater.getValue();
-                } else break;
+                Rater raterProfile = RaterDatabase.getRater(raterId);
+                if (raterProfile.hasRating(movieId)) {
+                    numMovieRaters++;
+                    double similarityScore = rater.getValue();
+                    double raterWeightedScore = raterProfile.getRating(movieId) * similarityScore;
+                    runningSum += raterWeightedScore;
+                }
+
             }
-            Rating retRating = new Rating(movieId, runningSum);
-            ret.add(retRating);
+            if (numMovieRaters >= minimalRaters && !RaterDatabase.getRater(id).hasRating(movieId)) {
+                //   divide by # movie raters
+                Rating movieWeightedAvg = new Rating(movieId, runningSum / numMovieRaters);
+                ret.add(movieWeightedAvg);
+            }
         }
         // return ret after sorting
         Collections.sort(ret, Collections.reverseOrder());
