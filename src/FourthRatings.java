@@ -42,8 +42,6 @@ public class FourthRatings {
         if (similarRaters.size() < numSimilarRaters) {
             return new ArrayList<Rating>();
         }
-//        System.out.println(similarRaters.size());
-//        System.out.println(similarRaters.get(1041));
         ArrayList<Rating> ret = new ArrayList<Rating>();
         ArrayList<String> moviesList = MovieDatabase.filterBy(new TrueFilter());
         for (String movieId : moviesList) {
@@ -70,6 +68,39 @@ public class FourthRatings {
             }
         }
         // return ret after sorting
+        Collections.sort(ret, Collections.reverseOrder());
+        return ret;
+    }
+    public ArrayList<Rating> getSimilarRatingsByFilter(String id, int numSimilarRaters, int minimalRaters, Filter f) {
+        ArrayList<Rating> similarRaters = getSimilarities(id);
+
+        if (similarRaters.size() < numSimilarRaters) {
+            return new ArrayList<Rating>();
+        }
+
+        ArrayList<Rating> ret = new ArrayList<Rating>();
+        ArrayList<String> moviesList = MovieDatabase.filterBy(f);
+
+        for (String movieId : moviesList) {
+            double runningSum = 0.0;
+            int numMovieRaters = 0;
+
+            for (int i = 0; i < numSimilarRaters; i++) {
+                String raterId = similarRaters.get(i).getItem();
+                Rater raterProfile = RaterDatabase.getRater(raterId);
+                if (raterProfile.hasRating(movieId)) {
+                    numMovieRaters++;
+                    double similarityScore = similarRaters.get(i).getValue();
+                    double raterWeightedScore = raterProfile.getRating(movieId) * similarityScore;
+                    runningSum += raterWeightedScore;
+                }
+
+            }
+            if (numMovieRaters >= minimalRaters) {
+                Rating movieWeightedAvg = new Rating(movieId, runningSum / numMovieRaters);
+                ret.add(movieWeightedAvg);
+            }
+        }
         Collections.sort(ret, Collections.reverseOrder());
         return ret;
     }
