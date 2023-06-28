@@ -5,34 +5,28 @@ import java.util.HashMap;
 public class FourthRatings {
     private double dotProduct(Rater me, Rater r) {
         HashMap<String, Double> raterMap = new HashMap<String, Double>();
-        ArrayList<String> meRated = me.getItemsRated();
-        ArrayList<String> rRated = r.getItemsRated();
+        ArrayList<String> movieList = MovieDatabase.filterBy(new TrueFilter());
         double answer = 0.0;
-        for (String rating : meRated) {
-            double rate = me.getRating(rating);
-            raterMap.put(rating, rate - 5.0);
-        }
-        for (String ratingId : rRated) {
-            if (raterMap.containsKey(ratingId)) {
-                double rating = r.getRating(ratingId);
-                double theirRating = raterMap.get(ratingId) - 5.0;
-                raterMap.put(ratingId, rating * theirRating);
+        for (String movieId : movieList) {
+            if (me.hasRating(movieId) && r.hasRating(movieId)) {
+                double meScore = me.getRating(movieId) - 5.0;
+                double rScore = r.getRating(movieId) - 5.0;
+                double product = meScore * rScore;
+                answer += product;
             }
-        }
-        for (String ratingId : raterMap.keySet()) {
-            answer += raterMap.get(ratingId);
         }
         return answer;
     }
     // get raters that are similar to id
     private ArrayList<Rating> getSimilarities(String id) {
         ArrayList<Rating> list = new ArrayList<Rating>();
+        ArrayList<Rater> ratersList = RaterDatabase.getRaters();
         Rater me = RaterDatabase.getRater(id);
-        for (Rater r : RaterDatabase.getRaters()) {
+        for (Rater r : ratersList) {
             if (!id.equals(r.getID())) {
                 double product = dotProduct(me, r);
-                Rating rating = new Rating(r.getID(), product);
-                if (rating.getValue() > 0.0) {
+                if (product > 0.0) {
+                    Rating rating = new Rating(r.getID(), product);
                     list.add(rating);
                 }
             }
@@ -58,18 +52,18 @@ public class FourthRatings {
             // Movie weighted avg = ((r1*s1) + (rx*sx)) / x
             // for a movie:
             //   add weighted avgs
-            for (Rating rater : similarRaters) {
-                String raterId = rater.getItem();
+            for (int i = 0; i < numSimilarRaters; i++) {
+                String raterId = similarRaters.get(i).getItem();
                 Rater raterProfile = RaterDatabase.getRater(raterId);
                 if (raterProfile.hasRating(movieId)) {
                     numMovieRaters++;
-                    double similarityScore = rater.getValue();
+                    double similarityScore = similarRaters.get(i).getValue();
                     double raterWeightedScore = raterProfile.getRating(movieId) * similarityScore;
                     runningSum += raterWeightedScore;
                 }
 
             }
-            if (numMovieRaters >= minimalRaters && !RaterDatabase.getRater(id).hasRating(movieId)) {
+            if (numMovieRaters >= minimalRaters) {
                 //   divide by # movie raters
                 Rating movieWeightedAvg = new Rating(movieId, runningSum / numMovieRaters);
                 ret.add(movieWeightedAvg);
@@ -79,6 +73,7 @@ public class FourthRatings {
         Collections.sort(ret, Collections.reverseOrder());
         return ret;
     }
+    // get average score for movie id
     private double getAverageByID(String id, int minimalRaters) {
         ArrayList<Rater> myRaters = RaterDatabase.getRaters();
         ArrayList<Double> movieRatings = new ArrayList<Double>();
